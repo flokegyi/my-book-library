@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum BookStatus {
+  UNREAD
+  READING
+  COMPLETED
+  ARCHIVED
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  tokenVersion Int      @default(0) @map("token_version")
+  name         String?
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  books           Book[]
+  tags            Tag[]
+  readingSessions ReadingSession[]
+
+  @@map("users")
+}
+
+model Book {
+  id           String     @id @default(uuid()) @db.Uuid
+  userId       String     @map("user_id") @db.Uuid
+  title        String
+  author       String?
+  description  String?
+  storagePath  String     @map("storage_path")
+  coverPath    String?    @map("cover_path")
+  fileSize     Int?       @map("file_size")
+  pageCount    Int?       @map("page_count")
+  status       BookStatus @default(UNREAD)
+  isPinned     Boolean    @default(false) @map("is_pinned")
+  lastReadPage Int        @default(1) @map("last_read_page")
+  lastReadAt   DateTime?  @map("last_read_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags            Tag[]            @relation("BookTags")
+  readingSessions ReadingSession[]
+  bookmarks       Bookmark[]
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([userId, isPinned])
+  @@map("books")
+}
+
+model Tag {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String
+  color     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  books Book[] @relation("BookTags")
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("tags")
+}
+
+model ReadingSession {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  bookId    String    @map("book_id") @db.Uuid
+  startPage Int       @map("start_page")
+  endPage   Int?      @map("end_page")
+  startedAt DateTime  @default(now()) @map("started_at")
+  endedAt   DateTime? @map("ended_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([bookId])
+  @@map("reading_sessions")
+}
+
+model Bookmark {
+  id        String   @id @default(uuid()) @db.Uuid
+  bookId    String   @map("book_id") @db.Uuid
+  page      Int
+  label     String?
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@map("bookmarks")
+}

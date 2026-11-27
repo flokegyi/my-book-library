@@ -1,0 +1,25 @@
+{
+  "name": "my-book-library",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev:client": "npm run dev --workspace client",
+    "dev:server": "npm run dev --workspace server",
+    "build": "npm run build --workspace client",
+    "start": "npm run start --workspace server",
+    "db:generate": "npm run db:generate --workspace server",
+    "db:migrate": "npm run db:migrate --workspace server --",
+    "db:migrate:deploy": "npm run db:migrate:deploy --workspace server",
+    "db:migrate:status": "npm run db:migrate:status --workspace server",
+    "db:seed": "npm run db:seed --workspace server",
+    "db:studio": "npm run db:studio --workspace server"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}
